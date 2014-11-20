@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-LOCAL_PATH := device/samsung/picassowifi
+LOCAL_PATH := device/samsung/lt03wifi
 
 # Platform
 BOARD_VENDOR := samsung
@@ -40,7 +40,7 @@ BOARD_BLUEDROID_VENDOR_CONF := $(LOCAL_PATH)/bluetooth/libbt_vndcfg.txt
 BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := $(LOCAL_PATH)/bluetooth
 
 # Bootloader
-TARGET_OTA_ASSERT_DEVICE := picassowifi
+TARGET_OTA_ASSERT_DEVICE := lt03wifi
 
 # Camera
 # COMMON_GLOBAL_CFLAGS += -DUSE_MEMORY_HEAP_ION
@@ -52,7 +52,7 @@ COMMON_GLOBAL_CFLAGS += -DSAMSUNG_DVFS
 # Kernel
 BOARD_KERNEL_BASE := 0x10000000
 BOARD_KERNEL_PAGESIZE := 2048
-TARGET_KERNEL_CONFIG := cyanogenmod_picassowifi_defconfig
+TARGET_KERNEL_CONFIG := cyanogenmod_lt03wifi_defconfig
 TARGET_KERNEL_SOURCE := kernel/samsung/exynos5420
 
 # Battery
@@ -83,7 +83,7 @@ BOARD_USES_HWC_SERVICES := true
 TARGET_SPECIFIC_HEADER_PATH := $(LOCAL_PATH)/include
 
 # Hardware
-BOARD_HARDWARE_CLASS += device/samsung/picassowifi/cmhw
+BOARD_HARDWARE_CLASS += device/samsung/lt03wifi/cmhw
 
 # Init
 TARGET_NR_SVC_SUPP_GIDS := 20
@@ -115,7 +115,7 @@ BOARD_USERDATAIMAGE_PARTITION_SIZE := 12532580352
 BOARD_FLASH_BLOCK_SIZE := 4096
 
 # PowerHAL
-TARGET_POWERHAL_VARIANT := picassowifi
+TARGET_POWERHAL_VARIANT := lt03wifi
 
 # Recovery
 COMMON_GLOBAL_CFLAGS += -DNO_SECURE_DISCARD
@@ -132,7 +132,7 @@ BOARD_USES_SCALER := true
 
 # SELinux
 BOARD_SEPOLICY_DIRS := \
-    device/samsung/picassowifi/sepolicy
+    device/samsung/lt03wifi/sepolicy
 
 BOARD_SEPOLICY_UNION := \
     file_contexts \
@@ -170,4 +170,4 @@ WIFI_DRIVER_FW_PATH_PARAM        := "/sys/module/dhd/parameters/firmware_path"
 WIFI_DRIVER_FW_PATH_STA          := "/system/etc/wifi/bcmdhd_sta.bin"
 
 # inherit from the proprietary version
--include vendor/samsung/picassowifi/BoardConfigVendor.mk
+-include vendor/samsung/lt03wifi/BoardConfigVendor.mk

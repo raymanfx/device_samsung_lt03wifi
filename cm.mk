@@ -1,13 +1,13 @@
-$(call inherit-product, device/samsung/picassowifi/full_picassowifi.mk)
+$(call inherit-product, device/samsung/lt03wifi/full_lt03wifi.mk)
 
 # Inherit some common CM stuff.
 $(call inherit-product, vendor/cm/config/common_full_tablet_wifionly.mk)
 
-PRODUCT_NAME := cm_picassowifi
-PRODUCT_DEVICE := picassowifi
+PRODUCT_NAME := cm_lt03wifi
+PRODUCT_DEVICE := lt03wifi
 
 PRODUCT_BUILD_PROP_OVERRIDES += \
-    PRODUCT_MODEL=SM-T520 \
-    PRODUCT_NAME=picassowifi \
-    PRODUCT_DEVICE=picassowifi \
-    TARGET_DEVICE=picassowifi \
+    PRODUCT_MODEL=SM-P600 \
+    PRODUCT_NAME=lt03wifi \
+    PRODUCT_DEVICE=lt03wifi \
+    TARGET_DEVICE=lt03wifi \
