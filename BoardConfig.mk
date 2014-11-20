@@ -131,10 +131,10 @@ RECOVERY_GRAPHICS_USE_LINELENGTH := true
 BOARD_USES_SCALER := true
 
 # SELinux
-BOARD_SEPOLICY_DIRS := \
+BOARD_SEPOLICY_DIRS += \
     device/samsung/lt03wifi/sepolicy
 
-BOARD_SEPOLICY_UNION := \
+BOARD_SEPOLICY_UNION += \
     file_contexts \
     device.te \
     domain.te \
