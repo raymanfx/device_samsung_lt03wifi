@@ -8,7 +8,7 @@ vendor/firmware/bcm4335.hcd
 vendor/firmware/bcm4335_A0.hcd
 vendor/firmware/bcm4335_murata.hcd
 vendor/firmware/bcm4335_semco.hcd
-vendor/firmware/BT_FW_VER_BCM4339_003.001.009.0031.0136_ORC_N1-3G.hcd
+vendor/firmware/BT_FW_VER_BCM4339_003.001.009.0025.0050_ORC_V1-3G.hcd
 
 # OemCrypto
 vendor/lib/liboemcrypto.so
