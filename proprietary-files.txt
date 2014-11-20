@@ -33,9 +33,9 @@ lib/libvdis.so
 bin/drmserver
 lib/libdrmdecrypt.so
 lib/libstagefright_hdcp.so
-lib/libwvdrm_L1.so
+vendor/lib/libwvdrm_L1.so
 lib/libWVphoneAPI.so
-lib/libWVStreamControlAPI_L1.so
+vendor/lib/libWVStreamControlAPI_L1.so
 vendor/lib/drm/libdrmwvmplugin.so
 vendor/lib/libwvm.so
 vendor/lib/mediadrm/libwvdrmengine.so
