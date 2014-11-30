@@ -30,7 +30,7 @@ lib/libsecnativefeature.so
 lib/libvdis.so
 
 # DRM
-bin/drmserver
+bin/drmserver:bin/drmserver.samsung
 lib/libdrmdecrypt.so
 lib/libstagefright_hdcp.so
 vendor/lib/libwvdrm_L1.so
