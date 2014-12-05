@@ -66,7 +66,7 @@ BOARD_USES_NEON_BLITANTIH := true
 # Graphics
 USE_OPENGL_RENDERER := true
 BOARD_EGL_CFG := $(LOCAL_PATH)/configs/egl.cfg
-# OVERRIDE_RS_DRIVER := libRSDriverArm.so
+OVERRIDE_RS_DRIVER := libRSDriverArm.so
 
 # HWCServices
 BOARD_USES_HWC_SERVICES := true
