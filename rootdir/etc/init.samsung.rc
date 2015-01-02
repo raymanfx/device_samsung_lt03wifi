@@ -45,6 +45,3 @@ on post-fs-data
     chmod 0775 /system/lib/drm
     restorecon_recursive /efs
 #]
-
-    mkdir /mnt/shell 0750 shell shell
-    mkdir /mnt/media_rw 0750 media_rw media_rw
