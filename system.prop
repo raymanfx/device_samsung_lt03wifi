@@ -6,6 +6,12 @@
 ro.sapa.jack.master=alsa
 ro.hdcp2.rx=tz
 
+# Audio flinger
+af.fast_track_multiplier=1
+
+# AAC 5.1
+media.aac_51_output_enabled=true
+
 # UI
 lockscreen.rot_override=true
 ro.sf.lcd_density=320
