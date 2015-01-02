@@ -131,7 +131,6 @@ BOARD_SEPOLICY_UNION += \
     drmserver.te \
     file.te \
     gpsd.te \
-    init.te \
     mediaserver.te \
     servicemanager.te \
     system_app.te \
