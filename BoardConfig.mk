@@ -134,6 +134,7 @@ BOARD_SEPOLICY_UNION += \
     gpsd.te \
     macloader.te \
     mediaserver.te \
+    service_contexts \
     servicemanager.te \
     system_app.te \
     system_server.te \
