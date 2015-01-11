@@ -33,6 +33,8 @@
 
 /data/.wifiver.info     u:object_r:wifi_data_file:s0
 /efs/wifi(/.*)?         u:object_r:wifi_efs_file:s0
+/efs/wifi/.mac.info     u:object_r:wifi_efs_file:s0
+/system/bin/macloader   u:object_r:macloader_exec:s0
 
 /system/bin/mcDriverDaemon  --  u:object_r:tee_exec:s0
 /system/bin/gpsd                u:object_r:gpsd_exec:s0

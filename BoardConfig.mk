@@ -132,6 +132,7 @@ BOARD_SEPOLICY_UNION += \
     drmserver.te \
     file.te \
     gpsd.te \
+    macloader.te \
     mediaserver.te \
     servicemanager.te \
     system_app.te \
