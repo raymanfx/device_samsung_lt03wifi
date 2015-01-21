@@ -26,6 +26,14 @@
 #include <hardware/power.h>
 
 #define TSP_POWER "/sys/class/input/input1/enabled"
+#define BOOSTPULSE_PATH "/sys/devices/system/cpu/cpufreq/interactive/boostpulse"
+
+struct lt03wifi_power_module {
+    struct power_module base;
+    pthread_mutex_t lock;
+    int boostpulse_fd;
+    int boostpulse_warned;
+};
 
 static void sysfs_write(char *path, char *s) {
     char buf[80];
@@ -49,16 +57,72 @@ static void sysfs_write(char *path, char *s) {
 
 static void power_init(struct power_module *module)
 {
+    /*
+     * cpufreq interactive governor: timer 20ms, min sample 60ms,
+     * hispeed 1G at load 60%.
+     */
+
+    sysfs_write("/sys/devices/system/cpu/cpufreq/interactive/timer_rate",
+                "20000");
+    sysfs_write("/sys/devices/system/cpu/cpufreq/interactive/min_sample_time",
+                "60000");
+    sysfs_write("/sys/devices/system/cpu/cpufreq/interactive/hispeed_freq",
+                "1000000");
+    sysfs_write("/sys/devices/system/cpu/cpufreq/interactive/go_hispeed_load",
+                "60");
+    sysfs_write("/sys/devices/system/cpu/cpufreq/interactive/above_hispeed_delay",
+                "40000");
 }
 
 static void power_set_interactive(struct power_module *module, int on)
 {
+    ALOGV("power_set_interactive: %d\n", on);
+    
     sysfs_write(TSP_POWER, on ? "1" : "0");
+    
+    ALOGV("power_set_interactive: %d done\n", on);
 }
 
-static void power_hint(struct power_module *module, power_hint_t hint,
+static int boostpulse_open(struct lt03wifi_power_module *lt03wifi)
+{
+    char buf[80];
+
+    pthread_mutex_lock(&lt03wifi->lock);
+
+    if (lt03wifi->boostpulse_fd < 0) {
+        lt03wifi->boostpulse_fd = open(BOOSTPULSE_PATH, O_WRONLY);
+
+        if (lt03wifi->boostpulse_fd < 0) {
+            if (!lt03wifi->boostpulse_warned) {
+                strerror_r(errno, buf, sizeof(buf));
+                ALOGE("Error opening %s: %s\n", BOOSTPULSE_PATH, buf);
+                lt03wifi->boostpulse_warned = 1;
+            }
+        }
+    }
+
+    pthread_mutex_unlock(&lt03wifi->lock);
+    return lt03wifi->boostpulse_fd;
+}
+
+static void lt03wifi_power_hint(struct power_module *module, power_hint_t hint,
                        void *data) {
+    struct lt03wifi_power_module *lt03wifi = (struct lt03wifi_power_module *) module;
+    char buf[80];
+    int len;
     switch (hint) {
+    case POWER_HINT_INTERACTION:
+        if (boostpulse_open(lt03wifi) >= 0) {
+            len = write(lt03wifi->boostpulse_fd, "1", 1);
+
+            if (len < 0) {
+                strerror_r(errno, buf, sizeof(buf));
+                ALOGE("Error writing to %s: %s\n", BOOSTPULSE_PATH, buf);
+            }
+        }
+
+        break;
+
     default:
         break;
     }
@@ -68,18 +132,24 @@ static struct hw_module_methods_t power_module_methods = {
     .open = NULL,
 };
 
-struct power_module HAL_MODULE_INFO_SYM = {
-    .common = {
-        .tag = HARDWARE_MODULE_TAG,
-        .module_api_version = POWER_MODULE_API_VERSION_0_2,
-        .hal_api_version = HARDWARE_HAL_API_VERSION,
-        .id = POWER_HARDWARE_MODULE_ID,
-        .name = "Lt03wifi Power HAL",
-        .author = "The CyanogenMod Project",
-        .methods = &power_module_methods,
-    },
+struct lt03wifi_power_module HAL_MODULE_INFO_SYM = {
+    base: {
+        common: {
+            tag: HARDWARE_MODULE_TAG,
+            module_api_version: POWER_MODULE_API_VERSION_0_2,
+            hal_api_version: HARDWARE_HAL_API_VERSION,
+            id: POWER_HARDWARE_MODULE_ID,
+            name: "Lt03wifi Power HAL",
+            author: "The CyanogenMod Project",
+            methods: &power_module_methods,
+        },
 
-    .init = power_init,
-    .setInteractive = power_set_interactive,
-    .powerHint = power_hint,
+        init: power_init,
+        setInteractive: power_set_interactive,
+        powerHint: lt03wifi_power_hint,
+    },
+    
+    lock: PTHREAD_MUTEX_INITIALIZER,
+    boostpulse_fd: -1,
+    boostpulse_warned: 0,
 };
