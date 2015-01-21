@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <dirent.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
@@ -25,7 +26,6 @@
 #include <hardware/hardware.h>
 #include <hardware/power.h>
 
-#define TSP_POWER "/sys/class/input/input1/enabled"
 #define BOOSTPULSE_PATH "/sys/devices/system/cpu/cpufreq/interactive/boostpulse"
 
 struct lt03wifi_power_module {
@@ -33,9 +33,10 @@ struct lt03wifi_power_module {
     pthread_mutex_t lock;
     int boostpulse_fd;
     int boostpulse_warned;
+    const char *touchscreen_power_path;
 };
 
-static void sysfs_write(char *path, char *s) {
+static void sysfs_write(const char *path, char *s) {
     char buf[80];
     int len;
     int fd = open(path, O_WRONLY);
@@ -55,8 +56,46 @@ static void sysfs_write(char *path, char *s) {
     close(fd);
 }
 
+static void init_touchscreen_power_path(struct lt03wifi_power_module *lt03wifi)
+{
+    char buf[80];
+    const char dir[] = "/sys/class/input/input1/enabled";
+    const char filename[] = "enabled";
+    DIR *d;
+    struct dirent *de;
+    char *path;
+    int pathsize;
+
+    d = opendir(dir);
+    if (d == NULL) {
+        strerror_r(errno, buf, sizeof(buf));
+        ALOGE("Error opening directory %s: %s\n", dir, buf);
+        return;
+    }
+    while ((de = readdir(d)) != NULL) {
+        if (strncmp("input", de->d_name, 5) == 0) {
+            pathsize = strlen(dir) + strlen(de->d_name) + sizeof(filename) + 2;
+            path = malloc(pathsize);
+            if (path == NULL) {
+                strerror_r(errno, buf, sizeof(buf));
+                ALOGE("Out of memory: %s\n", buf);
+                return;
+            }
+            snprintf(path, pathsize, "%s/%s/%s", dir, de->d_name, filename);
+            lt03wifi->touchscreen_power_path = path;
+            goto done;
+        }
+    }
+    ALOGE("Error failed to find input dir in %s\n", dir);
+done:
+    closedir(d);
+}
+
 static void power_init(struct power_module *module)
 {
+    struct lt03wifi_power_module *lt03wifi = (struct lt03wifi_power_module *) module;
+    struct dirent **namelist;
+    int n;
     /*
      * cpufreq interactive governor: timer 20ms, min sample 60ms,
      * hispeed 1G at load 60%.
@@ -72,13 +111,16 @@ static void power_init(struct power_module *module)
                 "60");
     sysfs_write("/sys/devices/system/cpu/cpufreq/interactive/above_hispeed_delay",
                 "40000");
+    init_touchscreen_power_path(lt03wifi);
 }
 
 static void power_set_interactive(struct power_module *module, int on)
 {
+    struct lt03wifi_power_module *lt03wifi = (struct lt03wifi_power_module *) module;
+    
     ALOGV("power_set_interactive: %d\n", on);
     
-    sysfs_write(TSP_POWER, on ? "1" : "0");
+    sysfs_write(lt03wifi->touchscreen_power_path, on ? "1" : "0");
     
     ALOGV("power_set_interactive: %d done\n", on);
 }
