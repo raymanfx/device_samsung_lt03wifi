@@ -183,6 +183,10 @@ PRODUCT_PACKAGES += \
     libnetcmdiface \
     macloader
 
+# for off charging mode
+PRODUCT_PACKAGES += \
+    charger_res_images
+
 # call dalvik heap config
 $(call inherit-product, frameworks/native/build/tablet-10in-xhdpi-2048-dalvik-heap.mk)
 
