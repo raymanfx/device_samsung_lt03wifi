@@ -19,6 +19,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <linux/time.h>
+#include <stdbool.h>
 
 #define LOG_TAG "Lt03wifi PowerHAL"
 #include <utils/Log.h>
@@ -27,6 +29,13 @@
 #include <hardware/power.h>
 
 #define BOOSTPULSE_PATH "/sys/devices/system/cpu/cpufreq/interactive/boostpulse"
+#define BOOST_PATH "/sys/devices/system/cpu/cpufreq/interactive/boost"
+//BOOST_PULSE_DURATION and BOOT_PULSE_DURATION_STR should always be in sync
+#define BOOST_PULSE_DURATION 1000000
+#define BOOST_PULSE_DURATION_STR "1000000"
+#define NSEC_PER_SEC 1000000000
+#define USEC_PER_SEC 1000000
+#define NSEC_PER_USEC 100
 
 struct lt03wifi_power_module {
     struct power_module base;
@@ -35,6 +44,10 @@ struct lt03wifi_power_module {
     int boostpulse_warned;
     const char *touchscreen_power_path;
 };
+
+static unsigned int vsync_count;
+static struct timespec last_touch_boost;
+static bool touch_boost;
 
 static void sysfs_write(const char *path, char *s) {
     char buf[80];
@@ -111,7 +124,7 @@ static void power_init(struct power_module *module)
     sysfs_write("/sys/devices/system/cpu/cpufreq/interactive/above_hispeed_delay",
                 "80000");
     sysfs_write("/sys/devices/system/cpu/cpufreq/interactive/boostpulse_duration",
-                "500000");
+                BOOST_PULSE_DURATION_STR);
     sysfs_write("/sys/devices/system/cpu/cpufreq/interactive/io_is_busy", "1");
     sysfs_write("/sys/devices/system/cpu/cpufreq/interactive/sync_freq", "1400000");
     sysfs_write("/sys/devices/system/cpu/cpufreq/interactive/up_threshold_any_cpu_load", "80");
@@ -152,22 +165,71 @@ static int boostpulse_open(struct lt03wifi_power_module *lt03wifi)
     return lt03wifi->boostpulse_fd;
 }
 
+static struct timespec timespec_diff(struct timespec lhs, struct timespec rhs)
+{
+    struct timespec result;
+    if (rhs.tv_nsec > lhs.tv_nsec) {
+        result.tv_sec = lhs.tv_sec - rhs.tv_sec - 1;
+        result.tv_nsec = NSEC_PER_SEC + lhs.tv_nsec - rhs.tv_nsec;
+    } else {
+        result.tv_sec = lhs.tv_sec - rhs.tv_sec;
+        result.tv_nsec = lhs.tv_nsec - rhs.tv_nsec;
+    }
+    return result;
+}
+
+static int check_boostpulse_on(struct timespec diff)
+{
+    long boost_ns = (BOOST_PULSE_DURATION * NSEC_PER_USEC) % NSEC_PER_SEC;
+    long boost_s = BOOST_PULSE_DURATION / USEC_PER_SEC;
+
+    if (diff.tv_sec == boost_s)
+        return (diff.tv_nsec < boost_ns);
+    return (diff.tv_sec < boost_s);
+}
+
 static void lt03wifi_power_hint(struct power_module *module, power_hint_t hint,
                        void *data) {
     struct lt03wifi_power_module *lt03wifi = (struct lt03wifi_power_module *) module;
+    struct timespec now, diff;
     char buf[80];
     int len;
     switch (hint) {
     case POWER_HINT_INTERACTION:
         if (boostpulse_open(lt03wifi) >= 0) {
+            pthread_mutex_lock(&lt03wifi->lock);
             len = write(lt03wifi->boostpulse_fd, "1", 1);
 
             if (len < 0) {
                 strerror_r(errno, buf, sizeof(buf));
                 ALOGE("Error writing to %s: %s\n", BOOSTPULSE_PATH, buf);
+            } else {
+                clock_gettime(CLOCK_MONOTONIC, &last_touch_boost);
+                touch_boost = true;
             }
+            pthread_mutex_unlock(&lt03wifi->lock);
         }
 
+        break;
+
+    case POWER_HINT_VSYNC:
+        pthread_mutex_lock(&lt03wifi->lock);
+        if (data) {
+            if (vsync_count < UINT_MAX)
+                vsync_count++;
+        } else {
+            if (vsync_count)
+                vsync_count--;
+            if (vsync_count == 0 && touch_boost) {
+                touch_boost = false;
+                clock_gettime(CLOCK_MONOTONIC, &now);
+                diff = timespec_diff(now, last_touch_boost);
+                if (check_boostpulse_on(diff)) {
+                    sysfs_write(BOOST_PATH, "0");
+                }
+            }
+        }
+        pthread_mutex_unlock(&lt03wifi->lock);
         break;
 
     default:
