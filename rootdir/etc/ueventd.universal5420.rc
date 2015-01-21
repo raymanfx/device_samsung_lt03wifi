@@ -77,4 +77,4 @@
 /dev/usb/lp*              0660   system     usb
 
 # Touchscreen Power Control
-/sys/class/input/input1/enabled   enabled    0660   system     system
+/sys/class/input/input1/enabled    0660   system     system
