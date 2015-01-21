@@ -14,7 +14,7 @@
 
 LOCAL_PATH := $(call my-dir)
 
-ifeq ($(TARGET_POWERHAL_VARIANT),lt03wifi)
+ifeq ($(TARGET_POWERHAL_VARIANT),universal5420)
 
 include $(CLEAR_VARS)
 
@@ -26,4 +26,4 @@ LOCAL_MODULE_TAGS := optional
 
 include $(BUILD_SHARED_LIBRARY)
 
-endif # TARGET_POWERHAL_VARIANT == lt03wifi
+endif # TARGET_POWERHAL_VARIANT == universal5420

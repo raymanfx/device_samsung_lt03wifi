@@ -22,7 +22,7 @@
 #include <linux/time.h>
 #include <stdbool.h>
 
-#define LOG_TAG "Lt03wifi PowerHAL"
+#define LOG_TAG "Universal5420 PowerHAL"
 #include <utils/Log.h>
 
 #include <hardware/hardware.h>
@@ -37,7 +37,7 @@
 #define USEC_PER_SEC 1000000
 #define NSEC_PER_USEC 100
 
-struct lt03wifi_power_module {
+struct universal5420_power_module {
     struct power_module base;
     pthread_mutex_t lock;
     int boostpulse_fd;
@@ -69,7 +69,7 @@ static void sysfs_write(const char *path, char *s) {
     close(fd);
 }
 
-static void init_touchscreen_power_path(struct lt03wifi_power_module *lt03wifi)
+static void init_touchscreen_power_path(struct universal5420_power_module *universal5420)
 {
     char buf[80];
     const char dir[] = "/sys/class/input/input1/enabled";
@@ -95,7 +95,7 @@ static void init_touchscreen_power_path(struct lt03wifi_power_module *lt03wifi)
                 return;
             }
             snprintf(path, pathsize, "%s/%s/%s", dir, de->d_name, filename);
-            lt03wifi->touchscreen_power_path = path;
+            universal5420->touchscreen_power_path = path;
             goto done;
         }
     }
@@ -106,7 +106,7 @@ done:
 
 static void power_init(struct power_module *module)
 {
-    struct lt03wifi_power_module *lt03wifi = (struct lt03wifi_power_module *) module;
+    struct universal5420_power_module *universal5420 = (struct universal5420_power_module *) module;
     struct dirent **namelist;
     int n;
 
@@ -129,40 +129,40 @@ static void power_init(struct power_module *module)
     sysfs_write("/sys/devices/system/cpu/cpufreq/interactive/sync_freq", "1400000");
     sysfs_write("/sys/devices/system/cpu/cpufreq/interactive/up_threshold_any_cpu_load", "80");
     
-    init_touchscreen_power_path(lt03wifi);
+    init_touchscreen_power_path(universal5420);
 }
 
 static void power_set_interactive(struct power_module *module, int on)
 {
-    struct lt03wifi_power_module *lt03wifi = (struct lt03wifi_power_module *) module;
+    struct universal5420_power_module *universal5420 = (struct universal5420_power_module *) module;
     
     ALOGV("power_set_interactive: %d\n", on);
     
-    sysfs_write(lt03wifi->touchscreen_power_path, on ? "1" : "0");
+    sysfs_write(universal5420->touchscreen_power_path, on ? "1" : "0");
     
     ALOGV("power_set_interactive: %d done\n", on);
 }
 
-static int boostpulse_open(struct lt03wifi_power_module *lt03wifi)
+static int boostpulse_open(struct universal5420_power_module *universal5420)
 {
     char buf[80];
 
-    pthread_mutex_lock(&lt03wifi->lock);
+    pthread_mutex_lock(&universal5420->lock);
 
-    if (lt03wifi->boostpulse_fd < 0) {
-        lt03wifi->boostpulse_fd = open(BOOSTPULSE_PATH, O_WRONLY);
+    if (universal5420->boostpulse_fd < 0) {
+        universal5420->boostpulse_fd = open(BOOSTPULSE_PATH, O_WRONLY);
 
-        if (lt03wifi->boostpulse_fd < 0) {
-            if (!lt03wifi->boostpulse_warned) {
+        if (universal5420->boostpulse_fd < 0) {
+            if (!universal5420->boostpulse_warned) {
                 strerror_r(errno, buf, sizeof(buf));
                 ALOGE("Error opening %s: %s\n", BOOSTPULSE_PATH, buf);
-                lt03wifi->boostpulse_warned = 1;
+                universal5420->boostpulse_warned = 1;
             }
         }
     }
 
-    pthread_mutex_unlock(&lt03wifi->lock);
-    return lt03wifi->boostpulse_fd;
+    pthread_mutex_unlock(&universal5420->lock);
+    return universal5420->boostpulse_fd;
 }
 
 static struct timespec timespec_diff(struct timespec lhs, struct timespec rhs)
@@ -188,17 +188,17 @@ static int check_boostpulse_on(struct timespec diff)
     return (diff.tv_sec < boost_s);
 }
 
-static void lt03wifi_power_hint(struct power_module *module, power_hint_t hint,
+static void universal5420_power_hint(struct power_module *module, power_hint_t hint,
                        void *data) {
-    struct lt03wifi_power_module *lt03wifi = (struct lt03wifi_power_module *) module;
+    struct universal5420_power_module *universal5420 = (struct universal5420_power_module *) module;
     struct timespec now, diff;
     char buf[80];
     int len;
     switch (hint) {
     case POWER_HINT_INTERACTION:
-        if (boostpulse_open(lt03wifi) >= 0) {
-            pthread_mutex_lock(&lt03wifi->lock);
-            len = write(lt03wifi->boostpulse_fd, "1", 1);
+        if (boostpulse_open(universal5420) >= 0) {
+            pthread_mutex_lock(&universal5420->lock);
+            len = write(universal5420->boostpulse_fd, "1", 1);
 
             if (len < 0) {
                 strerror_r(errno, buf, sizeof(buf));
@@ -207,13 +207,13 @@ static void lt03wifi_power_hint(struct power_module *module, power_hint_t hint,
                 clock_gettime(CLOCK_MONOTONIC, &last_touch_boost);
                 touch_boost = true;
             }
-            pthread_mutex_unlock(&lt03wifi->lock);
+            pthread_mutex_unlock(&universal5420->lock);
         }
 
         break;
 
     case POWER_HINT_VSYNC:
-        pthread_mutex_lock(&lt03wifi->lock);
+        pthread_mutex_lock(&universal5420->lock);
         if (data) {
             if (vsync_count < UINT_MAX)
                 vsync_count++;
@@ -229,7 +229,7 @@ static void lt03wifi_power_hint(struct power_module *module, power_hint_t hint,
                 }
             }
         }
-        pthread_mutex_unlock(&lt03wifi->lock);
+        pthread_mutex_unlock(&universal5420->lock);
         break;
 
     default:
@@ -241,21 +241,21 @@ static struct hw_module_methods_t power_module_methods = {
     .open = NULL,
 };
 
-struct lt03wifi_power_module HAL_MODULE_INFO_SYM = {
+struct universal5420_power_module HAL_MODULE_INFO_SYM = {
     .base = {
         .common = {
             .tag = HARDWARE_MODULE_TAG,
             .module_api_version = POWER_MODULE_API_VERSION_0_2,
             .hal_api_version = HARDWARE_HAL_API_VERSION,
             .id = POWER_HARDWARE_MODULE_ID,
-            .name = "Lt03wifi Power HAL",
+            .name = "Universal5420 Power HAL",
             .author = "The CyanogenMod Project",
             .methods = &power_module_methods,
         },
 
         .init = power_init,
         .setInteractive = power_set_interactive,
-        .powerHint = lt03wifi_power_hint,
+        .powerHint = universal5420_power_hint,
     },
     
     .lock = PTHREAD_MUTEX_INITIALIZER,
