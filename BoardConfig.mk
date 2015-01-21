@@ -51,8 +51,9 @@ BOARD_KERNEL_PAGESIZE := 2048
 TARGET_KERNEL_CONFIG := cyanogenmod_lt03wifi_defconfig
 TARGET_KERNEL_SOURCE := kernel/samsung/lt03wifi
 
-# Battery
-BOARD_BATTERY_DEVICE_NAME := battery
+# Charger/Healthd
+BOARD_CHARGER_ENABLE_SUSPEND := true
+CHARGING_ENABLED_PATH := "/sys/class/power_supply/battery/batt_lp_charging"
 
 # Bootloader
 TARGET_BOOTLOADER_BOARD_NAME := universal5420
