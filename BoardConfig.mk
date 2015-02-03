@@ -42,7 +42,7 @@ BOARD_BLUEDROID_VENDOR_CONF := $(LOCAL_PATH)/bluetooth/libbt_vndcfg.txt
 BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := $(LOCAL_PATH)/bluetooth
 
 # Bootloader
-TARGET_OTA_ASSERT_DEVICE := lt03wifi,lt03wifiue
+TARGET_OTA_ASSERT_DEVICE := lt03wifi,lt03wifiue,lt033g
 
 # Camera
 BOARD_NEEDS_MEMORYHEAPION := true
