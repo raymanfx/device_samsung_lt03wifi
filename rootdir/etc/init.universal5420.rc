@@ -562,3 +562,13 @@ service swapon /sbin/sswap -s
     user root
     group root
     oneshot
+
+# Create camera ID file for Exynos camera HAL
+service camera_id /system/bin/sh /system/etc/init.exynos.cam.sh
+    class main
+    user root
+    disabled
+    oneshot
+
+on property:init.svc.bootanim=stopped
+    start camera_id
