@@ -18,6 +18,9 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
 # Inherit from lt03wifi device
 $(call inherit-product, device/samsung/lt03wifi/device.mk)
 
+# Inherit from eos vendor
+$(call inherit-product, vendor/eos/config/common_full_tablet_wifionly.mk)
+
 # Discard inherited values and use our own instead.
 PRODUCT_NAME := full_lt03wifi
 PRODUCT_DEVICE := lt03wifi
