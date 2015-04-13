@@ -46,7 +46,7 @@
 #include <audio_utils/echo_reference.h>
 #include <audio_route/audio_route.h>
 
-#include <eS325VoiceProcessing.h>
+#include "eS325VoiceProcessing.h"
 
 #include "routing.h"
 #include "ril_interface.h"
