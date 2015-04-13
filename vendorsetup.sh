@@ -1,1 +1,1 @@
-add_lunch_combo cm_lt03wifi-userdebug
+add_lunch_combo eos_lt03wifi-userdebug
